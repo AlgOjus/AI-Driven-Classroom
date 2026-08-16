@@ -3,7 +3,7 @@ function Navbar(props) {
         <div className="navbar">
             <div className="navbar-brand">
                 <span className="brand-icon">📚</span>
-                <h2>Smart Classroom <span className="brand-ai">AI</span></h2>
+                <h2>Manan<span className="brand-ai">AI</span></h2>
             </div>
             <div className="navbar-right">
                 <ThemeSwitcher />
