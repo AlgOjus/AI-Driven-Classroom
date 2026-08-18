@@ -5,24 +5,31 @@ function AuthPage(props) {
     var s4 = React.useState(''); var password = s4[0], setPassword = s4[1];
     var s5 = React.useState('student'); var role = s5[0], setRole = s5[1];
     var s6 = React.useState(''); var error = s6[0], setError = s6[1];
+    var s7 = React.useState(function () {
+        try { return JSON.parse(localStorage.getItem('recentLogins') || '[]'); } catch (e) { return []; }
+    });
+    var recentLogins = s7[0];
+    var s8 = React.useState(false); var showSuggestions = s8[0], setShowSuggestions = s8[1];
 
-    var particles = React.useState(function () {
-        return Array.from({ length: 18 }).map(function () {
-            return {
-                left: Math.random() * 100,
-                delay: Math.random() * 10,
-                duration: 8 + Math.random() * 10,
-                size: 4 + Math.random() * 8
-            };
-        });
-    })[0];
+    function saveRecentLogin(em) {
+        try {
+            var list = JSON.parse(localStorage.getItem('recentLogins') || '[]');
+            list = list.filter(function (x) { return x !== em; });
+            list.unshift(em);
+            list = list.slice(0, 3);
+            localStorage.setItem('recentLogins', JSON.stringify(list));
+        } catch (e) { }
+    }
 
     function submit(e) {
         e.preventDefault();
         setError('');
         if (mode === 'login') {
             apiFetch('/auth/login', 'POST', { email: email, password: password })
-                .then(function (data) { props.onAuthSuccess(data); })
+                .then(function (data) {
+                    saveRecentLogin(email);
+                    props.onAuthSuccess(data);
+                })
                 .catch(function (err) { setError(err.message); });
         } else {
             apiFetch('/auth/signup', 'POST', { name: name, email: email, password: password, role: role })
@@ -42,11 +49,34 @@ function AuthPage(props) {
                 <div className="auth-container glass">
                     <div className="auth-logo">📚 <span>Smart Classroom AI</span></div>
                     <h2>{mode === 'login' ? 'Welcome Back' : 'Create Account'}</h2>
-                    <form onSubmit={submit}>
+                    <form onSubmit={submit} autoComplete="off">
                         {mode === 'signup' && (
                             <input placeholder="Full Name" value={name} onChange={function (e) { setName(e.target.value); }} required />
                         )}
-                        <input type="email" placeholder="Email" value={email} onChange={function (e) { setEmail(e.target.value); }} required />
+
+                        <div className="input-wrap">
+                            <input
+                                type="email" placeholder="Email" value={email} autoComplete="off"
+                                onFocus={function () { setShowSuggestions(true); }}
+                                onBlur={function () { setTimeout(function () { setShowSuggestions(false); }, 150); }}
+                                onChange={function (e) { setEmail(e.target.value); }}
+                                required
+                            />
+                            {mode === 'login' && showSuggestions && recentLogins.length > 0 && (
+                                <div className="login-dropdown">
+                                    <div className="login-dropdown-label">Recent logins</div>
+                                    {recentLogins.map(function (em, i) {
+                                        return (
+                                            <div key={i} className="login-dropdown-item"
+                                                onMouseDown={function () { setEmail(em); setShowSuggestions(false); }}>
+                                                👤 {em}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+
                         <input type="password" placeholder="Password" value={password} onChange={function (e) { setPassword(e.target.value); }} required />
                         {mode === 'signup' && (
                             <select value={role} onChange={function (e) { setRole(e.target.value); }}>
@@ -64,5 +94,4 @@ function AuthPage(props) {
             </div>
         </div>
     );
-
 }

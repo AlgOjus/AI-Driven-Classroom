@@ -31,13 +31,25 @@ function ClassroomPage(props) {
             .catch(function (e) { setError(e.message); });
     }
 
+    function handleCopy(e) {
+        copyText(classroom.classCode);
+        var btn = e.currentTarget;
+        var original = btn.innerText;
+        btn.innerText = '✅ Copied';
+        setTimeout(function () { btn.innerText = original; }, 1200);
+    }
+
     return (
         <div className="container">
             <button className="btn secondary" onClick={props.onBack}>← Back to Dashboard</button>
             <div className="card" style={{ marginTop: 14 }}>
                 <h3>{classroom.name} {classroom.section ? '- ' + classroom.section : ''}</h3>
                 {user.role === 'teacher' && (
-                    <p>Class Code: <span className="classcode-badge">{classroom.classCode}</span> (share this with students)</p>
+                    <p>
+                        Class Code: <span className="classcode-badge">{classroom.classCode}</span>{' '}
+                        <button className="copy-btn light" onClick={handleCopy}>📋 Copy</button>{' '}
+                        (share this with students)
+                    </p>
                 )}
             </div>
 
@@ -78,6 +90,7 @@ function ClassroomPage(props) {
                                 {openChatFor === p.sessionId && <ChatWidget sessionId={p.sessionId} />}
                             </div>
                         )}
+                        {p.type === 'quiz' && <QuizView quiz={p.quiz} topic={null} />}
                     </div>
                 );
             })}

@@ -4,7 +4,7 @@ const fs = require("fs");
 async function extractTextFromFile(filePath) {
     const dataBuffer = fs.readFileSync(filePath);
     const parsed = await pdfParse(dataBuffer);
-    return parsed.text || "";
+    return { text: parsed.text || "", numPages: parsed.numpages || 1 };
 }
 
 function chunkText(text, size) {

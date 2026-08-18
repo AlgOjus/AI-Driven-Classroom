@@ -5,7 +5,7 @@ const { auth } = require("../middleware/auth");
 const { db, persist, genId } = require("../utils/db");
 const { extractTextFromFile, chunkText } = require("../services/pdfService");
 const { analyzeChunk, embedText } = require("../services/aiService");
-const { resolveAllSuggestions } = require("../services/visualLibrary");
+const { resolveFlashcards } = require("../services/visualLibrary");
 
 const UPLOAD_DIR = path.join(__dirname, "..", "..", "uploads");
 
@@ -23,13 +23,15 @@ router.post("/upload/:classroomId", auth(["teacher"]), upload.single("pdf"), asy
         const filePath = req.file.path;
         const fileUrl = "/uploads/" + path.basename(filePath);
 
-        const rawText = await extractTextFromFile(filePath);
+        const extracted = await extractTextFromFile(filePath);
+        const rawText = extracted.text;
+        const numPages = extracted.numPages;
         const rawChunks = chunkText(rawText);
 
         const chunks = [];
         for (let i = 0; i < rawChunks.length; i++) {
             const analysis = await analyzeChunk(rawChunks[i]);
-            const suggestions = await resolveAllSuggestions(analysis.suggestions);
+            const flashcards = await resolveFlashcards(analysis.flashcards);
             const embedding = await embedText(rawChunks[i]);
             chunks.push({
                 id: genId(),
@@ -37,35 +39,25 @@ router.post("/upload/:classroomId", auth(["teacher"]), upload.single("pdf"), asy
                 text: rawChunks[i],
                 topic: analysis.topic,
                 keywords: analysis.keywords,
-                suggestions,
+                flashcards,
                 quiz: analysis.quiz || [],
                 embedding,
             });
         }
 
         const material = {
-            id: genId(),
-            classroomId,
-            title: req.body.title || req.file.originalname,
-            fileUrl,
-            rawText,
-            chunks,
-            createdAt: new Date().toISOString(),
+            id: genId(), classroomId, title: req.body.title || req.file.originalname,
+            fileUrl, rawText, numPages, chunks, createdAt: new Date().toISOString(),
         };
         db.materials.push(material);
 
         const post = {
-            id: genId(),
-            classroomId,
-            type: "material",
-            title: "📄 New Material: " + material.title,
-            materialId: material.id,
-            fileUrl,
-            createdAt: new Date().toISOString(),
+            id: genId(), classroomId, type: "material",
+            title: "📄 New Material: " + material.title, materialId: material.id,
+            fileUrl, createdAt: new Date().toISOString(),
         };
         db.posts.push(post);
         persist();
-
         res.json(material);
     } catch (e) {
         console.error(e);

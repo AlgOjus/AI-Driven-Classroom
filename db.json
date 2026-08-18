@@ -23,6 +23,14 @@
       "password": "$2b$10$6nIXT8B.KNHRBLQCFAabCu9y2xlTK97flDW.Jk1fwbqsZduNVDqrK",
       "role": "teacher",
       "createdAt": "2026-08-16T16:40:56.443Z"
+    },
+    {
+      "id": "msyver2w5hvdtpc",
+      "name": "Jay",
+      "email": "student@gmail.com",
+      "password": "$2b$10$0YQ71AiECwVKBwRytcf32.sG5SQQk14J2oUrFpbyV3cXq3x7J/S22",
+      "role": "student",
+      "createdAt": "2026-08-18T16:22:01.880Z"
     }
   ],
   "classrooms": [
@@ -65,7 +73,9 @@
       "teacherId": "msw17d6jy73mx5p",
       "teacherName": "Jayendra",
       "classCode": "943CGE",
-      "students": [],
+      "students": [
+        "msyver2w5hvdtpc"
+      ],
       "createdAt": "2026-08-16T16:41:24.480Z"
     },
     {
@@ -4612,6 +4622,50 @@
     {
       "id": "msw6rri8qgldu32",
       "classroomId": "msw17ytbxjclaqp",
+      "materialId": "msw18ebz0y8ac3i",
+      "teacherId": "msw17d6jy73mx5p",
+      "transcript": "",
+      "matchedTopics": [],
+      "summary": "## Class Summary (auto-generated)\n\n**Topics Covered:**\n- General overview of the material\n\n**Transcript Excerpt:**\nNo voice transcript was captured this session.\n\n**Note:** Set OPENAI_API_KEY environment variable for richer AI-generated summaries and practice questions.",
+      "status": "ended",
+      "createdAt": "2026-08-16T18:07:19.894Z"
+    },
+    {
+      "id": "msw4cmapdxrj6s6",
+      "classroomId": "msw17ytbxjclaqp",
+      "materialId": "msw1nse3ht1be2f",
+      "teacherId": "msw17d6jy73mx5p",
+      "transcript": "",
+      "matchedTopics": [],
+      "summary": "## Class Summary (auto-generated)\n\n**Topics Covered:**\n- General overview of the material\n\n**Transcript Excerpt:**\nNo voice transcript was captured this session.\n\n**Note:** Set OPENAI_API_KEY environment variable for richer AI-generated summaries and practice questions.",
+      "status": "ended",
+      "createdAt": "2026-08-16T18:09:00.385Z"
+    },
+    {
+      "id": "msw6ilqp2g1law7",
+      "classroomId": "msw17ytbxjclaqp",
+      "materialId": "msw18ebz0y8ac3i",
+      "teacherId": "msw17d6jy73mx5p",
+      "transcript": "",
+      "matchedTopics": [],
+      "summary": "",
+      "status": "live",
+      "createdAt": "2026-08-16T19:09:38.833Z"
+    },
+    {
+      "id": "msw8h4j75w08r8t",
+      "classroomId": "msw1cvx1r38vwv0",
+      "materialId": "msw1dbmmajuq6re",
+      "teacherId": "msw17d6jy73mx5p",
+      "transcript": "",
+      "matchedTopics": [],
+      "summary": "",
+      "status": "live",
+      "createdAt": "2026-08-16T20:04:29.107Z"
+    },
+    {
+      "id": "msw8phtp926hvqp",
+      "classroomId": "msw17ytbxjclaqp",
       "materialId": "msw1nse3ht1be2f",
       "teacherId": "msw17d6jy73mx5p",
       "transcript": "",
@@ -4619,6 +4673,88 @@
       "summary": "",
       "status": "live",
       "createdAt": "2026-08-16T19:16:46.208Z"
+     
+    },
+    {
+      "id": "msw8qd6gfkilbto",
+      "classroomId": "msw17ytbxjclaqp",
+      "materialId": "msw18ebz0y8ac3i",
+      "teacherId": "msw17d6jy73mx5p",
+      "transcript": " database management system is a system in which packet design to store manage databases managing large quantity of data structure efficient retrieval and modification query processing and Optimisation sharing data multiple user can use and manipally data controlling the SS to data manipulating the Data integrity database application like banking Airlines University sales manufacturing human resource and what others of DBMS data manipulation data security and integrity file system what is the file system",
+      "matchedTopics": [
+        {
+          "topic": "data database information",
+          "timestamp": "2026-08-16T20:12:23.668Z"
+        },
+        {
+          "topic": "data dbms users",
+          "timestamp": "2026-08-16T20:12:59.668Z"
+        }
+      ],
+      "summary": "",
+      "status": "live",
+      "createdAt": "2026-08-16T20:11:40.216Z"
+    },
+    {
+      "id": "msydsi3pca6neud",
+      "classroomId": "msw17ytbxjclaqp",
+      "materialId": "msw18ebz0y8ac3i",
+      "teacherId": "msw17d6jy73mx5p",
+      "transcript": "",
+      "matchedTopics": [],
+      "summary": "",
+      "status": "live",
+      "createdAt": "2026-08-18T08:08:50.341Z"
+    },
+    {
+      "id": "msyu6d3r0sygs8m",
+      "classroomId": "msw17ytbxjclaqp",
+      "materialId": "msw18ebz0y8ac3i",
+      "teacherId": "msw17d6jy73mx5p",
+      "transcript": " speak in data versus information details collection of facts that is uses values or reason why it can be number words measurement observation or even just description of thing data is generally collection  of things  that data is the stored in excel this different from database collection of related peace of data representing capturing the prevention about the enterprise data in the day the it has intended group of users movies fuck yourself",
+      "matchedTopics": [
+        {
+          "topic": "data database information",
+          "timestamp": "2026-08-18T15:52:35.433Z"
+        },
+        {
+          "topic": "data database information",
+          "timestamp": "2026-08-18T15:52:47.430Z"
+        },
+        {
+          "topic": "data database information",
+          "timestamp": "2026-08-18T15:52:59.427Z"
+        },
+        {
+          "topic": "data database information",
+          "timestamp": "2026-08-18T15:53:23.432Z"
+        }
+      ],
+      "summary": "",
+      "status": "live",
+      "createdAt": "2026-08-18T15:47:30.903Z"
+    },
+    {
+      "id": "msyuo8r4cy1ifsa",
+      "classroomId": "msw17ytbxjclaqp",
+      "materialId": "msw1fmm2wv95479",
+      "teacherId": "msw17d6jy73mx5p",
+      "transcript": "",
+      "matchedTopics": [],
+      "summary": "",
+      "status": "live",
+      "createdAt": "2026-08-18T16:01:25.072Z"
+    },
+    {
+      "id": "msyupw59j73o607",
+      "classroomId": "msw1cvx1r38vwv0",
+      "materialId": "msw1dbmmajuq6re",
+      "teacherId": "msw17d6jy73mx5p",
+      "transcript": "",
+      "matchedTopics": [],
+      "summary": "",
+      "status": "live",
+      "createdAt": "2026-08-18T16:02:42.045Z"
     }
   ],
   "posts": [
@@ -4685,6 +4821,26 @@
       "materialId": "msw1nse3ht1be2f",
       "fileUrl": "/uploads/1786899222591-Dbms_Week3.pdf",
       "createdAt": "2026-08-16T16:53:42.651Z"
+    },
+    {
+      "id": "msw4cc51kqmvt7d",
+      "classroomId": "msw17ytbxjclaqp",
+      "type": "summary",
+      "title": "🧠 AI Class Summary: Intro to DB",
+      "content": "## Class Summary (auto-generated)\n\n**Topics Covered:**\n- General overview of the material\n\n**Transcript Excerpt:**\nNo voice transcript was captured this session.\n\n**Note:** Set OPENAI_API_KEY environment variable for richer AI-generated summaries and practice questions.",
+      "sessionId": "msw4agraabr4cxp",
+      "materialId": "msw18ebz0y8ac3i",
+      "createdAt": "2026-08-16T18:08:47.221Z"
+    },
+    {
+      "id": "msw4k3dsgl5ez51",
+      "classroomId": "msw17ytbxjclaqp",
+      "type": "summary",
+      "title": "🧠 AI Class Summary: Dbms Week3.pdf",
+      "content": "## Class Summary (auto-generated)\n\n**Topics Covered:**\n- General overview of the material\n\n**Transcript Excerpt:**\nNo voice transcript was captured this session.\n\n**Note:** Set OPENAI_API_KEY environment variable for richer AI-generated summaries and practice questions.",
+      "sessionId": "msw4cmapdxrj6s6",
+      "materialId": "msw1nse3ht1be2f",
+      "createdAt": "2026-08-16T18:14:49.120Z"
     }
   ],
   "chatlogs": [
