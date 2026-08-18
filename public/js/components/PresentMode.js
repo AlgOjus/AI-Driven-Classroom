@@ -12,8 +12,8 @@ function PresentMode(props) {
     var s8 = React.useState(false); var postingSummary = s8[0], setPostingSummary = s8[1];
     var s9 = React.useState(''); var toast = s9[0], setToast = s9[1];
     var s10 = React.useState([]); var pinnedVisuals = s10[0], setPinnedVisuals = s10[1];
-    var s11 = React.useState(0); var elapsedSec = s11[0], setElapsedSec = s11[1];
     var s12 = React.useState(false); var controlsOpen = s12[0], setControlsOpen = s12[1];
+    var s13 = React.useState(false); var isSlideshow = s13[0], setIsSlideshow = s13[1];
 
     var recognitionRef = React.useRef(null);
     var bufferRef = React.useRef('');
@@ -21,7 +21,7 @@ function PresentMode(props) {
     var listeningRef = React.useRef(false);
     var sessionRef = React.useRef(null);
     var fsRef = React.useRef(null);
-    var startTimeRef = React.useRef(Date.now());
+    var slideshowIntervalRef = React.useRef(null);
 
     var numPages = material.numPages || 1;
 
@@ -37,22 +37,13 @@ function PresentMode(props) {
         document.addEventListener('fullscreenchange', handleFsChange);
         document.addEventListener('webkitfullscreenchange', handleFsChange);
 
-        var timerIv = setInterval(function () {
-            setElapsedSec(Math.floor((Date.now() - startTimeRef.current) / 1000));
-        }, 1000);
-
         return function () {
             stopListening();
-            clearInterval(timerIv);
+            if (slideshowIntervalRef.current) clearInterval(slideshowIntervalRef.current);
             document.removeEventListener('fullscreenchange', handleFsChange);
             document.removeEventListener('webkitfullscreenchange', handleFsChange);
         };
     }, []);
-
-    function formatTime(sec) {
-        var m = Math.floor(sec / 60), s = sec % 60;
-        return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
-    }
 
     function showToast(msg) { setToast(msg); setTimeout(function () { setToast(''); }, 2500); }
 
@@ -151,6 +142,18 @@ function PresentMode(props) {
     function prevPage() { setPage(function (p) { return Math.max(1, p - 1); }); }
     function nextPage() { setPage(function (p) { return Math.min(numPages, p + 1); }); }
 
+    function toggleSlideshow() {
+        if (isSlideshow) {
+            if (slideshowIntervalRef.current) clearInterval(slideshowIntervalRef.current);
+            setIsSlideshow(false);
+        } else {
+            setIsSlideshow(true);
+            slideshowIntervalRef.current = setInterval(function () {
+                setPage(function (p) { return p < numPages ? p + 1 : 1; });
+            }, 5000);
+        }
+    }
+
     function handleDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; }
 
     function handleDrop(e) {
@@ -186,19 +189,22 @@ function PresentMode(props) {
 
     return (
         <div className="present-wrap">
-            <div className="present-fullscreen-target" ref={fsRef}>
-                <div className="slide-toolbar">
-                    <div className="slide-nav">
-                        <button className="btn secondary sm" onClick={exitWithoutSummary}>← Back</button>
-                        <button className="btn secondary sm" onClick={prevPage} disabled={page <= 1}>◀ Prev</button>
-                        <span className="slide-page-indicator">Page {page} / {numPages}</span>
-                        <button className="btn secondary sm" onClick={nextPage} disabled={page >= numPages}>Next ▶</button>
+            <div className={"present-fullscreen-target" + (isFullscreen ? " fullscreen-active" : "")} ref={fsRef}>
+
+                {!isFullscreen && (
+                    <div className="slide-toolbar">
+                        <div className="slide-nav">
+                            <button className="btn secondary sm" onClick={exitWithoutSummary}>← Back</button>
+                            <button className="btn secondary sm" onClick={prevPage} disabled={page <= 1}>◀ Prev</button>
+                            <span className="slide-page-indicator">Page {page} / {numPages}</span>
+                            <button className="btn secondary sm" onClick={nextPage} disabled={page >= numPages}>Next ▶</button>
+                            <button className="btn secondary sm" onClick={toggleSlideshow}>
+                                {isSlideshow ? '⏸ Stop Slideshow' : '▶ Slideshow'}
+                            </button>
+                        </div>
+                        <button className="btn secondary sm" onClick={toggleFullscreen}>⛶ Fullscreen</button>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <span className="session-timer">⏱ {formatTime(elapsedSec)}</span>
-                        <button className="btn secondary sm" onClick={toggleFullscreen}>{isFullscreen ? '🡼 Exit Fullscreen' : '⛶ Fullscreen'}</button>
-                    </div>
-                </div>
+                )}
 
                 <div className="pdf-frame-wrap" onDragOver={handleDragOver} onDrop={handleDrop}>
                     <iframe title="pdf" src={pdfSrc} className="pdf-frame"></iframe>
@@ -230,25 +236,32 @@ function PresentMode(props) {
                         onOpened={function () { setHasNewMatch(false); }}
                         onSendQuiz={sendQuizToStudents}
                     />
-                    <div className="fab-wrap">
-                        <button className="round-fab controls" onClick={function () { setControlsOpen(!controlsOpen); }} title="Class Controls">
-                            <ControlsIcon size={26} />
+
+                    {isFullscreen ? (
+                        <button className="round-fab summary-quick" onClick={postSummaryNow} disabled={postingSummary} title="Post Summary">
+                            {postingSummary ? '...' : '📤'}
                         </button>
-                        {controlsOpen && (
-                            <div className="fab-popup-menu">
-                                <button className={"btn" + (listening ? " btn-recording" : "")} onClick={function () { listening ? stopListening() : startListening(); }}>
-                                    {listening ? '🔴 Stop AI Listening' : '🎙️ Start AI Listening'}
-                                </button>
-                                <button className="btn secondary" onClick={postSummaryNow} disabled={postingSummary}>
-                                    {postingSummary ? 'Posting...' : '📤 Post Summary'}
-                                </button>
-                                <button className="btn danger" onClick={endClass} disabled={ending}>
-                                    {ending ? 'Ending...' : '🔚 End Class & Exit'}
-                                </button>
-                                <button className="btn secondary" onClick={exitWithoutSummary}>🚪 Exit (no summary)</button>
-                            </div>
-                        )}
-                    </div>
+                    ) : (
+                        <div className="fab-wrap">
+                            <button className="round-fab controls" onClick={function () { setControlsOpen(!controlsOpen); }} title="Class Controls">
+                                <ControlsIcon size={26} />
+                            </button>
+                            {controlsOpen && (
+                                <div className="fab-popup-menu">
+                                    <button className={"btn" + (listening ? " btn-recording" : "")} onClick={function () { listening ? stopListening() : startListening(); }}>
+                                        {listening ? '🔴 Stop AI Listening' : '🎙️ Start AI Listening'}
+                                    </button>
+                                    <button className="btn secondary" onClick={postSummaryNow} disabled={postingSummary}>
+                                        {postingSummary ? 'Posting...' : '📤 Post Summary'}
+                                    </button>
+                                    <button className="btn danger" onClick={endClass} disabled={ending}>
+                                        {ending ? 'Ending...' : '🔚 End Class & Exit'}
+                                    </button>
+                                    <button className="btn secondary" onClick={exitWithoutSummary}>🚪 Exit (no summary)</button>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 {toast && <div className="toast-msg">{toast}</div>}

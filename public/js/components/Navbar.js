@@ -3,10 +3,11 @@ function Navbar(props) {
         <div className="navbar">
             <div className="navbar-brand">
                 <span className="brand-icon">📚</span>
-                <h2>Manan<span className="brand-ai">AI</span></h2>
+                <h2>Smart Classroom <span className="brand-ai">AI</span></h2>
             </div>
             <div className="navbar-right">
                 <ThemeSwitcher />
+                <BackgroundTextureSwitcher />
                 <div className="navbar-user">
                     <span className="user-avatar">{props.user.name.charAt(0).toUpperCase()}</span>
                     <span className="user-info">{props.user.name}<small>{props.user.role}</small></span>

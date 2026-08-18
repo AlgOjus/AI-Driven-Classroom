@@ -20,7 +20,7 @@ const STOPWORDS = new Set([
 ]);
 
 function extractKeywords(text, n) {
-    n = n || 6;
+    n = n || 8;
     const freq = {};
     text.toLowerCase().replace(/[^a-z0-9\s]/g, "").split(/\s+/).forEach((w) => {
         if (w.length > 3 && !STOPWORDS.has(w)) freq[w] = (freq[w] || 0) + 1;
@@ -37,38 +37,46 @@ function shuffleArray(arr) {
     return a;
 }
 
+function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+function ensureMinKeywords(topic, keywords, minCount) {
+    const kws = (keywords || []).slice();
+    let i = 1;
+    while (kws.length < minCount) { kws.push(topic + " point " + i); i++; }
+    return kws;
+}
+
 function buildFallbackQuiz(topic, keywords) {
-    const kws = keywords && keywords.length ? keywords : [topic];
-    const count = Math.min(4, Math.max(1, kws.length));
+    const kws = ensureMinKeywords(topic, keywords, 5);
+    const count = Math.min(5, kws.length);
     const qs = [];
     for (let i = 0; i < count; i++) {
-        const correct = kws[i] || topic;
+        const correct = kws[i];
         const pool = kws.filter((k) => k !== correct);
-        const options = [
+        const options = shuffleArray([
             correct,
-            pool[0] || "Unrelated Concept " + (i + 1),
-            pool[1] || "Different Chapter Topic",
-            pool[2] || "Random Fact",
-        ];
-        const shuffled = shuffleArray(options);
+            pool[0] || topic + " (unrelated)",
+            pool[1] || "None of these",
+            pool[2] || "Not covered in this lesson",
+        ]);
         qs.push({
             question: 'Which of these was discussed in relation to "' + topic + '"?',
-            options: shuffled,
-            answerIndex: shuffled.indexOf(correct),
+            options,
+            answerIndex: options.indexOf(correct),
         });
     }
     return qs;
 }
 
 function buildFallbackFlashcards(topic, keywords) {
-    const kws = keywords && keywords.length ? keywords : [topic];
+    const kws = ensureMinKeywords(topic, keywords, 3);
     const labels = { "3d": "3D Model", animation: "Animation", simulation: "Simulation" };
     const result = {};
     ["3d", "animation", "simulation"].forEach((type) => {
-        result[type] = [0, 1].map((i) => {
+        result[type] = [0, 1, 2].map((i) => {
             const kw = kws[i % kws.length] || topic;
             return {
-                title: kw.charAt(0).toUpperCase() + kw.slice(1) + " — " + labels[type],
+                title: capitalize(kw) + " — " + labels[type],
                 description: 'Explore a ' + labels[type].toLowerCase() + ' illustrating "' + kw + '" from this part of the lesson.',
                 query: kw + " " + topic,
             };
@@ -109,10 +117,10 @@ async function analyzeChunk(text) {
         try {
             const prompt =
                 "Analyze this textbook passage for a teaching app. Return STRICT JSON only with keys: " +
-                "topic (short string), keywords (array of 5 lowercase strings), " +
-                "flashcards (object with keys '3d','animation','simulation', each an array of exactly 2 objects shaped as " +
+                "topic (short string), keywords (array of 6 lowercase strings), " +
+                "flashcards (object with keys '3d','animation','simulation', each an array of exactly 3 objects shaped as " +
                 "{title: short catchy title, description: 1-2 sentence description of what this visualization would show, query: short search phrase}), " +
-                "quiz (array of exactly 4 objects shaped as {question: string, options: array of exactly 4 strings, answerIndex: number 0-3}). " +
+                "quiz (array of exactly 5 objects shaped as {question: string, options: array of exactly 4 strings, answerIndex: number 0-3}). " +
                 "Passage: " + text.slice(0, 1500);
             const res = await OpenAIClient.chat.completions.create({
                 model: "gpt-4o-mini",

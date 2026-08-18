@@ -82,7 +82,6 @@ router.post("/:id/end", auth(["teacher"]), async (req, res) => {
     }
 });
 
-// Bonus: teacher can push a quiz directly to the classroom stream for students to attempt
 router.post("/:id/post-quiz", auth(["teacher"]), (req, res) => {
     try {
         const session = db.sessions.find((s) => s.id === req.params.id);
@@ -91,7 +90,7 @@ router.post("/:id/post-quiz", auth(["teacher"]), (req, res) => {
         const post = {
             id: genId(), classroomId: session.classroomId, type: "quiz",
             title: "📝 Quiz: " + (topic || "Practice Questions"), quiz: quiz || [],
-            sessionId: session.id, createdAt: new Date().toISOString(),
+            sessionId: session.id, materialId: session.materialId, createdAt: new Date().toISOString(),
         };
         db.posts.push(post);
         persist();

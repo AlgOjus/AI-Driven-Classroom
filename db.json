@@ -4673,7 +4673,6 @@
       "summary": "",
       "status": "live",
       "createdAt": "2026-08-16T19:16:46.208Z"
-     
     },
     {
       "id": "msw8qd6gfkilbto",
@@ -4755,6 +4754,48 @@
       "summary": "",
       "status": "live",
       "createdAt": "2026-08-18T16:02:42.045Z"
+    },
+    {
+      "id": "msyy5fo8fii6o2l",
+      "classroomId": "msw17ytbxjclaqp",
+      "materialId": "msw1nse3ht1be2f",
+      "teacherId": "msw17d6jy73mx5p",
+      "transcript": "",
+      "matchedTopics": [],
+      "summary": "",
+      "status": "live",
+      "createdAt": "2026-08-18T17:38:46.040Z"
+    },
+    {
+      "id": "msyy6troz4bwcyg",
+      "classroomId": "msw17ytbxjclaqp",
+      "materialId": "msw18ebz0y8ac3i",
+      "teacherId": "msw17d6jy73mx5p",
+      "transcript": " hello are you listening anything data is a collection of facts and as values or measurement it can be numbers words measurement observation or even just description of things data is stored in excel sheet it is different from database no related pieces of data representing capturing the information  about of an Enterprises database is designed bill populated with dayti it has intended chalo Achcha theek Hai Tum Se Kaha",
+      "matchedTopics": [
+        {
+          "topic": "data database information",
+          "timestamp": "2026-08-18T17:41:12.371Z"
+        },
+        {
+          "topic": "data database information",
+          "timestamp": "2026-08-18T17:41:24.365Z"
+        }
+      ],
+      "summary": "## Class Summary (auto-generated)\n\n**Topics Covered:**\n- data database information\n\n**Transcript Excerpt:**\n hello are you listening anything data is a collection of facts and as values or measurement it can be numbers words measurement observation or even just description of things data is stored in excel sheet it is different from database no related pieces of data representing capturing the information  about of an Enterprises database is designed bill populated with dayti it has intended chalo Achcha theek Hai Tum Se Kaha\n\n**Note:** Set OPENAI_API_KEY for richer AI-generated summaries.",
+      "status": "live",
+      "createdAt": "2026-08-18T17:39:50.964Z"
+    },
+    {
+      "id": "msyyqbykqrcom77",
+      "classroomId": "msw17ytbxjclaqp",
+      "materialId": "msw18ebz0y8ac3i",
+      "teacherId": "msw17d6jy73mx5p",
+      "transcript": "",
+      "matchedTopics": [],
+      "summary": "## Class Summary (auto-generated)\n\n**Topics Covered:**\n- General overview of the material\n\n**Transcript Excerpt:**\nNo voice transcript was captured this session.\n\n**Note:** Set OPENAI_API_KEY for richer AI-generated summaries.",
+      "status": "live",
+      "createdAt": "2026-08-18T17:55:01.004Z"
     }
   ],
   "posts": [
@@ -4841,6 +4882,47 @@
       "sessionId": "msw4cmapdxrj6s6",
       "materialId": "msw1nse3ht1be2f",
       "createdAt": "2026-08-16T18:14:49.120Z"
+    },
+    {
+      "id": "msyy65n3tzl96qc",
+      "classroomId": "msw17ytbxjclaqp",
+      "type": "quiz",
+      "title": "📝 Quiz: table alter create",
+      "quiz": [
+        {
+          "question": "Which of the following best matches the topic just discussed?",
+          "options": [
+            "table",
+            "alter",
+            "create",
+            "table alter create"
+          ],
+          "answerIndex": 3
+        }
+      ],
+      "sessionId": "msyy5fo8fii6o2l",
+      "materialId": "msw1nse3ht1be2f",
+      "createdAt": "2026-08-18T17:39:19.695Z"
+    },
+    {
+      "id": "msyybccj22zj8jp",
+      "classroomId": "msw17ytbxjclaqp",
+      "type": "summary",
+      "title": "🧠 AI Class Summary (in-progress): Intro to DB",
+      "content": "## Class Summary (auto-generated)\n\n**Topics Covered:**\n- data database information\n\n**Transcript Excerpt:**\n hello are you listening anything data is a collection of facts and as values or measurement it can be numbers words measurement observation or even just description of things data is stored in excel sheet it is different from database no related pieces of data representing capturing the information  about of an Enterprises database is designed bill populated with dayti it has intended chalo Achcha theek Hai Tum Se Kaha\n\n**Note:** Set OPENAI_API_KEY for richer AI-generated summaries.",
+      "sessionId": "msyy6troz4bwcyg",
+      "materialId": "msw18ebz0y8ac3i",
+      "createdAt": "2026-08-18T17:43:21.667Z"
+    },
+    {
+      "id": "msyysmjkwtklt3b",
+      "classroomId": "msw17ytbxjclaqp",
+      "type": "summary",
+      "title": "🧠 AI Class Summary (in-progress): Intro to DB",
+      "content": "## Class Summary (auto-generated)\n\n**Topics Covered:**\n- General overview of the material\n\n**Transcript Excerpt:**\nNo voice transcript was captured this session.\n\n**Note:** Set OPENAI_API_KEY for richer AI-generated summaries.",
+      "sessionId": "msyyqbykqrcom77",
+      "materialId": "msw18ebz0y8ac3i",
+      "createdAt": "2026-08-18T17:56:48.032Z"
     }
   ],
   "chatlogs": [
