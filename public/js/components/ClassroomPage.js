@@ -93,7 +93,7 @@ function ClassroomPage(props) {
                             </button>
                         </div>
                         <div className="material-right">
-                            <p className="material-right-label">🧠 AI Class Updates</p>
+                            <p className="material-right-label">🧠 AI Class Updates : </p>
                             <div className="material-right-feed">
                                 {related.length === 0 && (
                                     <p className="empty-hint-sm">No AI summary yet — this will appear here once the teacher posts a summary or ends class.</p>
