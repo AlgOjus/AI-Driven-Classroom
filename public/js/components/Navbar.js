@@ -2,8 +2,7 @@ function Navbar(props) {
     return (
         <div className="navbar">
             <div className="navbar-brand">
-                <span className="brand-icon">📚</span>
-                <h2>Manan<span className="brand-ai">AI</span></h2>
+                <h2>Manan <span className="brand-ai"> AI </span></h2>
             </div>
             <div className="navbar-right">
                 <ThemeSwitcher />
