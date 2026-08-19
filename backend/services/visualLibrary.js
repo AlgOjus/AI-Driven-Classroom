@@ -27,11 +27,25 @@ function resolveVisual(type, query) {
     return { embeddable: false, url: "#" };
 }
 
-async function resolveAllSuggestions(suggestions) {
-    return suggestions.map((s) => {
-        const r = resolveVisual(s.type, s.query);
-        return Object.assign({}, s, { url: r.url, embeddable: r.embeddable });
-    });
+async function resolveFlashcards(flashcards) {
+    const result = {};
+    const types = Object.keys(flashcards || {});
+    for (let t = 0; t < types.length; t++) {
+        const type = types[t];
+        const list = flashcards[type] || [];
+        const resolvedList = [];
+        for (let i = 0; i < list.length; i++) {
+            const card = list[i];
+            const r = resolveVisual(type, card.query);
+            resolvedList.push({
+                id: type + "-" + i + "-" + Math.random().toString(36).slice(2, 7),
+                type, title: card.title, description: card.description, query: card.query,
+                url: r.url, embeddable: r.embeddable,
+            });
+        }
+        result[type] = resolvedList;
+    }
+    return result;
 }
 
-module.exports = { resolveVisual, resolveAllSuggestions };
+module.exports = { resolveVisual, resolveFlashcards };

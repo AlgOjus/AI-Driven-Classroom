@@ -24,6 +24,15 @@ function Dashboard(props) {
             .catch(function (e) { setError(e.message); });
     }
 
+    function handleCopy(e, codeToCopy) {
+        e.stopPropagation();
+        copyText(codeToCopy);
+        var btn = e.currentTarget;
+        var original = btn.innerText;
+        btn.innerText = '✅';
+        setTimeout(function () { btn.innerText = original; }, 1200);
+    }
+
     return (
         <div className="container">
             {props.user.role === 'teacher' && (
@@ -54,7 +63,12 @@ function Dashboard(props) {
                             <h4>{c.name}</h4>
                             <p>{c.section}</p>
                             <p>Teacher: {c.teacherName}</p>
-                            {props.user.role === 'teacher' && <span className="classcode-badge">{c.classCode}</span>}
+                            {props.user.role === 'teacher' && (
+                                <div className="classcode-row">
+                                    <span className="classcode-badge">{c.classCode}</span>
+                                    <button className="copy-btn" onClick={function (e) { handleCopy(e, c.classCode); }}>📋</button>
+                                </div>
+                            )}
                         </div>
                     );
                 })}

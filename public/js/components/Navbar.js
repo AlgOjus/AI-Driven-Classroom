@@ -6,6 +6,7 @@ function Navbar(props) {
             </div>
             <div className="navbar-right">
                 <ThemeSwitcher />
+                <BackgroundTextureSwitcher />
                 <div className="navbar-user">
                     <span className="user-avatar">{props.user.name.charAt(0).toUpperCase()}</span>
                     <span className="user-info">{props.user.name}<small>{props.user.role}</small></span>

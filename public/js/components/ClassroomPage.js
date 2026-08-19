@@ -31,13 +31,36 @@ function ClassroomPage(props) {
             .catch(function (e) { setError(e.message); });
     }
 
+    function handleCopy(e) {
+        copyText(classroom.classCode);
+        var btn = e.currentTarget;
+        var original = btn.innerText;
+        btn.innerText = '✅ Copied';
+        setTimeout(function () { btn.innerText = original; }, 1200);
+    }
+
+    var materialPosts = posts.filter(function (p) { return p.type === 'material'; });
+    var otherPosts = posts.filter(function (p) { return p.type !== 'material'; });
+
+    function relatedFor(materialId) {
+        return otherPosts
+            .filter(function (p) { return p.materialId === materialId; })
+            .sort(function (a, b) { return new Date(b.createdAt) - new Date(a.createdAt); });
+    }
+
+    var ungrouped = otherPosts.filter(function (p) { return !p.materialId; });
+
     return (
         <div className="container">
             <button className="btn secondary" onClick={props.onBack}>← Back to Dashboard</button>
             <div className="card" style={{ marginTop: 14 }}>
                 <h3>{classroom.name} {classroom.section ? '- ' + classroom.section : ''}</h3>
                 {user.role === 'teacher' && (
-                    <p>Class Code: <span className="classcode-badge">{classroom.classCode}</span> (share this with students)</p>
+                    <p>
+                        Class Code: <span className="classcode-badge">{classroom.classCode}</span>{' '}
+                        <button className="copy-btn light" onClick={handleCopy}>📋 Copy</button>{' '}
+                        (share this with students)
+                    </p>
                 )}
             </div>
 
@@ -57,31 +80,60 @@ function ClassroomPage(props) {
             {error && <p style={{ color: 'red' }}>{error}</p>}
 
             <h3>Class Stream</h3>
-            {posts.map(function (p) {
+
+            {materialPosts.map(function (p) {
+                var related = relatedFor(p.materialId);
                 return (
-                    <div className="post-card" key={p.id}>
-                        <h4>{p.title}</h4>
-                        <p style={{ color: '#888', fontSize: 12 }}>{new Date(p.createdAt).toLocaleString()}</p>
-                        {p.type === 'material' && (
+                    <div className="material-card" key={p.id}>
+                        <div className="material-left">
+                            <h4>{p.title}</h4>
+                            <p className="post-date">{new Date(p.createdAt).toLocaleString()}</p>
                             <button className="btn" onClick={function () { openMaterial(p.materialId); }}>
                                 {user.role === 'teacher' ? '🖥️ Present This' : '📖 Open PDF'}
                             </button>
-                        )}
-                        {p.type === 'summary' && (
-                            <div>
-                                <div className="post-summary-content">{p.content}</div>
-                                {user.role === 'student' && (
-                                    <button className="btn" style={{ marginTop: 10 }} onClick={function () { setOpenChatFor(openChatFor === p.sessionId ? null : p.sessionId); }}>
-                                        💬 {openChatFor === p.sessionId ? 'Close AI Chat' : 'Ask AI about this class'}
-                                    </button>
+                        </div>
+                        <div className="material-right">
+                            <p className="material-right-label">🧠 AI Class Updates</p>
+                            <div className="material-right-feed">
+                                {related.length === 0 && (
+                                    <p className="empty-hint-sm">No AI summary yet — this will appear here once the teacher posts a summary or ends class.</p>
                                 )}
-                                {openChatFor === p.sessionId && <ChatWidget sessionId={p.sessionId} />}
+                                {related.map(function (rp) {
+                                    return (
+                                        <div className="mini-update-card" key={rp.id}>
+                                            <p className="mini-update-title">{rp.title}</p>
+                                            {rp.type === 'summary' && (
+                                                <div>
+                                                    <div className="post-summary-content small">{rp.content}</div>
+                                                    {user.role === 'student' && (
+                                                        <button className="btn sm" style={{ marginTop: 8 }}
+                                                            onClick={function () { setOpenChatFor(openChatFor === rp.sessionId ? null : rp.sessionId); }}>
+                                                            💬 {openChatFor === rp.sessionId ? 'Close AI Chat' : 'Ask AI about this class'}
+                                                        </button>
+                                                    )}
+                                                    {openChatFor === rp.sessionId && <ChatWidget sessionId={rp.sessionId} />}
+                                                </div>
+                                            )}
+                                            {rp.type === 'quiz' && <QuizView quiz={rp.quiz} topic={null} />}
+                                        </div>
+                                    );
+                                })}
                             </div>
-                        )}
+                        </div>
                     </div>
                 );
             })}
-            {posts.length === 0 && <p className="empty-hint">No posts yet.</p>}
+
+            {materialPosts.length === 0 && <p className="empty-hint">No posts yet.</p>}
+
+            {ungrouped.length > 0 && (
+                <div>
+                    <h3 style={{ marginTop: 24 }}>Other Updates</h3>
+                    {ungrouped.map(function (p) {
+                        return <div className="post-card" key={p.id}><h4>{p.title}</h4></div>;
+                    })}
+                </div>
+            )}
         </div>
     );
 }

@@ -1,12 +1,14 @@
 function AIPanel(props) {
     var matchHistory = props.matchHistory || [];
-    var s1 = React.useState(false); var open = s1[0], setOpen = s1[1];
-    var s2 = React.useState(0); var selectedIndex = s2[0], setSelectedIndex = s2[1];
-    var s3 = React.useState('3d'); var activeTab = s3[0], setActiveTab = s3[1];
+    var pdfTopics = props.pdfTopics || [];
 
-    React.useEffect(function () {
-        setSelectedIndex(0);
-    }, [matchHistory.length]);
+    var s1 = React.useState(false); var open = s1[0], setOpen = s1[1];
+    var s2 = React.useState('live'); var mainTab = s2[0], setMainTab = s2[1];
+    var s3 = React.useState(0); var selectedLiveIndex = s3[0], setSelectedLiveIndex = s3[1];
+    var s4 = React.useState(0); var selectedPdfIndex = s4[0], setSelectedPdfIndex = s4[1];
+    var s5 = React.useState('3d'); var activeSubTab = s5[0], setActiveSubTab = s5[1];
+
+    React.useEffect(function () { setSelectedLiveIndex(0); }, [matchHistory.length]);
 
     function toggleOpen() {
         var next = !open;
@@ -14,13 +16,13 @@ function AIPanel(props) {
         if (next && props.onOpened) props.onOpened();
     }
 
-    var current = matchHistory[selectedIndex];
+    var current = mainTab === 'live' ? matchHistory[selectedLiveIndex] : pdfTopics[selectedPdfIndex];
 
     return (
-        <div className="ai-panel-root">
-            <button className={"ai-fab" + (props.hasNewMatch && !open ? " pulse" : "")} onClick={toggleOpen} title="AI Teaching Assistant">
-                {open ? '✕' : '🤖'}
-                {!open && matchHistory.length > 0 && <span className="ai-fab-badge">{matchHistory.length}</span>}
+        <div className="fab-wrap">
+            <button className={"round-fab ai" + (props.hasNewMatch && !open ? " pulse" : "")} onClick={toggleOpen} title="AI Teaching Assistant">
+                {open ? <span style={{ fontSize: 20 }}>✕</span> : <AIIcon size={28} />}
+                {!open && props.hasNewMatch && <span className="dot"></span>}
             </button>
 
             {open && (
@@ -29,48 +31,61 @@ function AIPanel(props) {
                         <h3>🤖 AI Teaching Assistant</h3>
                         <button className="ai-panel-close" onClick={function () { setOpen(false); }}>✕</button>
                     </div>
+
+                    <div className="ai-main-tabs">
+                        <button className={mainTab === 'live' ? 'active' : ''} onClick={function () { setMainTab('live'); }}>🔴 Live Topic</button>
+                        <button className={mainTab === 'pdf' ? 'active' : ''} onClick={function () { setMainTab('pdf'); }}>📄 PDF Topics</button>
+                    </div>
+
                     <div className="ai-panel-body">
                         <div className="ai-topics-col">
-                            <p className="ai-topics-label">Live Topics (priority order)</p>
-                            {matchHistory.length === 0 && (
-                                <p className="empty-hint-sm">🎙️ Start listening — AI will detect topics here in real time, prioritized by what's currently being taught.</p>
+                            <p className="ai-topics-label">{mainTab === 'live' ? 'Detected while teaching' : 'All topics in this PDF'}</p>
+
+                            {mainTab === 'live' && matchHistory.length === 0 && (
+                                <p className="empty-hint-sm">🎙️ Start listening — a topic appears here only when it truly matches this PDF's content.</p>
                             )}
-                            {matchHistory.map(function (m, i) {
+                            {mainTab === 'live' && matchHistory.map(function (m, i) {
                                 return (
-                                    <div key={i}
-                                        className={"ai-topic-item" + (i === selectedIndex ? " active" : "") + (i === 0 ? " latest" : "")}
-                                        onClick={function () { setSelectedIndex(i); }}>
+                                    <div key={i} className={"ai-topic-item" + (i === selectedLiveIndex ? " active" : "")} onClick={function () { setSelectedLiveIndex(i); }}>
                                         {i === 0 && <span className="live-dot"></span>}
                                         <span>{m.topic}</span>
                                     </div>
                                 );
                             })}
+
+                            {mainTab === 'pdf' && pdfTopics.length === 0 && <p className="empty-hint-sm">Scanning PDF content...</p>}
+                            {mainTab === 'pdf' && pdfTopics.map(function (t, i) {
+                                return (
+                                    <div key={i} className={"ai-topic-item" + (i === selectedPdfIndex ? " active" : "")} onClick={function () { setSelectedPdfIndex(i); }}>
+                                        <span>{t.topic}</span>
+                                    </div>
+                                );
+                            })}
                         </div>
+
                         <div className="ai-content-col">
                             {current ? (
                                 <React.Fragment>
                                     <div className="ai-tabs">
-                                        <button className={activeTab === '3d' ? 'active' : ''} onClick={function () { setActiveTab('3d'); }}>🧊 3D Model</button>
-                                        <button className={activeTab === 'animation' ? 'active' : ''} onClick={function () { setActiveTab('animation'); }}>🎞️ Animation</button>
-                                        <button className={activeTab === 'simulation' ? 'active' : ''} onClick={function () { setActiveTab('simulation'); }}>⚙️ Simulation</button>
-                                        <button className={activeTab === 'quiz' ? 'active' : ''} onClick={function () { setActiveTab('quiz'); }}>📝 Quiz</button>
+                                        <button className={activeSubTab === '3d' ? 'active' : ''} onClick={function () { setActiveSubTab('3d'); }}>🧊 3D</button>
+                                        <button className={activeSubTab === 'animation' ? 'active' : ''} onClick={function () { setActiveSubTab('animation'); }}>🎞️ Animation</button>
+                                        <button className={activeSubTab === 'simulation' ? 'active' : ''} onClick={function () { setActiveSubTab('simulation'); }}>⚙️ Simulation</button>
+                                        <button className={activeSubTab === 'quiz' ? 'active' : ''} onClick={function () { setActiveSubTab('quiz'); }}>📝 Quiz</button>
                                     </div>
                                     <div className="ai-tab-content">
-                                        {activeTab !== 'quiz' && (function () {
-                                            var s = (current.suggestions || []).find(function (x) { return x.type === activeTab; });
-                                            if (!s) return <p className="empty-hint-sm">No {activeTab} suggestion available for this topic.</p>;
-                                            return (
-                                                <div>
-                                                    <p className="ai-query-label">🔍 {s.query}</p>
-                                                    {s.embeddable ? (
-                                                        <iframe title="visual" src={s.url} className="ai-embed-frame"></iframe>
-                                                    ) : (
-                                                        <a className="btn" href={s.url} target="_blank" rel="noreferrer">Open {activeTab} resource ↗</a>
-                                                    )}
-                                                </div>
-                                            );
-                                        })()}
-                                        {activeTab === 'quiz' && <QuizView quiz={current.quiz || []} />}
+                                        {activeSubTab !== 'quiz' && (
+                                            <div className="flashcard-grid">
+                                                {((current.flashcards && current.flashcards[activeSubTab]) || []).map(function (card, i) {
+                                                    return <FlashCard key={card.id || i} card={card} />;
+                                                })}
+                                                {(!current.flashcards || !current.flashcards[activeSubTab] || !current.flashcards[activeSubTab].length) && (
+                                                    <p className="empty-hint-sm">No {activeSubTab} content generated for this topic.</p>
+                                                )}
+                                            </div>
+                                        )}
+                                        {activeSubTab === 'quiz' && (
+                                            <QuizView quiz={current.quiz || []} topic={current.topic} onSendQuiz={props.onSendQuiz} />
+                                        )}
                                     </div>
                                 </React.Fragment>
                             ) : (
@@ -84,25 +99,60 @@ function AIPanel(props) {
     );
 }
 
+function FlashCard(props) {
+    var card = props.card;
+    var s1 = React.useState(false); var showPreview = s1[0], setShowPreview = s1[1];
+
+    function handleDragStart(e) {
+        e.dataTransfer.setData('application/json', JSON.stringify(card));
+        e.dataTransfer.effectAllowed = 'copy';
+    }
+
+    return (
+        <div className="flashcard" draggable={true} onDragStart={handleDragStart}>
+            <div className="flashcard-title">{card.title}</div>
+            <div className="flashcard-desc">{card.description}</div>
+            <div className="flashcard-actions">
+                <span className="flashcard-drag-hint">✋ Drag onto slide</span>
+                <button className="flashcard-preview-btn" onClick={function (e) { e.stopPropagation(); setShowPreview(!showPreview); }}>
+                    {showPreview ? 'Hide' : '👁 Preview'}
+                </button>
+            </div>
+            {showPreview && (
+                <div className="flashcard-embed">
+                    {card.embeddable ? (
+                        <iframe title={card.title} src={card.url}></iframe>
+                    ) : (
+                        <p className="empty-hint-sm">Live inline preview isn't available for this one — drag it onto the slide to present it.</p>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+}
+
 function QuizView(props) {
     var quiz = props.quiz || [];
     var s1 = React.useState({}); var answers = s1[0], setAnswers = s1[1];
     var s2 = React.useState(false); var submitted = s2[0], setSubmitted = s2[1];
+    var s3 = React.useState(false); var sent = s3[0], setSent = s3[1];
 
     if (!quiz.length) return <p className="empty-hint-sm">No quiz generated for this topic yet.</p>;
 
     function selectAnswer(qIndex, optIndex) {
         if (submitted) return;
-        setAnswers(function (prev) {
-            var copy = Object.assign({}, prev);
-            copy[qIndex] = optIndex;
-            return copy;
-        });
+        setAnswers(function (prev) { var c = Object.assign({}, prev); c[qIndex] = optIndex; return c; });
     }
 
     var score = 0;
-    if (submitted) {
-        quiz.forEach(function (q, i) { if (answers[i] === q.answerIndex) score++; });
+    if (submitted) quiz.forEach(function (q, i) { if (answers[i] === q.answerIndex) score++; });
+
+    function handleSend() {
+        if (props.onSendQuiz) {
+            props.onSendQuiz(props.topic, quiz);
+            setSent(true);
+            setTimeout(function () { setSent(false); }, 2000);
+        }
     }
 
     return (
@@ -117,11 +167,7 @@ function QuizView(props) {
                                 if (answers[qi] === oi) cls += " selected";
                                 if (submitted && oi === q.answerIndex) cls += " correct";
                                 if (submitted && answers[qi] === oi && oi !== q.answerIndex) cls += " wrong";
-                                return (
-                                    <div key={oi} className={cls} onClick={function () { selectAnswer(qi, oi); }}>
-                                        {opt}
-                                    </div>
-                                );
+                                return <div key={oi} className={cls} onClick={function () { selectAnswer(qi, oi); }}>{opt}</div>;
                             })}
                         </div>
                     </div>
@@ -131,6 +177,11 @@ function QuizView(props) {
                 <button className="btn" onClick={function () { setSubmitted(true); }}>Submit Quiz</button>
             ) : (
                 <p className="quiz-score">Score: {score} / {quiz.length}</p>
+            )}
+            {props.onSendQuiz && (
+                <button className="btn secondary quiz-send-btn" onClick={handleSend}>
+                    {sent ? '✅ Sent to students!' : '📤 Send this quiz to students'}
+                </button>
             )}
         </div>
     );
