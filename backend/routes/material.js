@@ -4,7 +4,7 @@ const path = require("path");
 const { auth } = require("../middleware/auth");
 const { db, persist, genId } = require("../utils/db");
 const { extractTextFromFile, chunkText } = require("../services/pdfService");
-const { analyzeChunk, embedText } = require("../services/aiService");
+const { analyzeChunk, embedText, HAS_AI } = require("../services/aiService");
 const { resolveFlashcards } = require("../services/visualLibrary");
 
 const UPLOAD_DIR = path.join(__dirname, "..", "..", "uploads");
@@ -14,6 +14,8 @@ const storage = multer.diskStorage({
     filename: (req, file, cb) => cb(null, Date.now() + "-" + file.originalname.replace(/\s+/g, "_")),
 });
 const upload = multer({ storage, limits: { fileSize: 25 * 1024 * 1024 } });
+
+function sleep(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
 
 router.post("/upload/:classroomId", auth(["teacher"]), upload.single("pdf"), async (req, res) => {
     try {
@@ -26,10 +28,13 @@ router.post("/upload/:classroomId", auth(["teacher"]), upload.single("pdf"), asy
         const extracted = await extractTextFromFile(filePath);
         const rawText = extracted.text;
         const numPages = extracted.numPages;
-        const rawChunks = chunkText(rawText);
+        const rawChunks = chunkText(rawText, 25); // capped at 25 chunks max
+
+        console.log("📄 PDF split into " + rawChunks.length + " chunks. Processing with AI" + (HAS_AI ? " (this will take ~" + Math.ceil(rawChunks.length * 4.5 / 60) + " min due to free-tier rate limiting)..." : " (heuristic mode)..."));
 
         const chunks = [];
         for (let i = 0; i < rawChunks.length; i++) {
+            console.log("  → Analyzing chunk " + (i + 1) + "/" + rawChunks.length);
             const analysis = await analyzeChunk(rawChunks[i]);
             const flashcards = await resolveFlashcards(analysis.flashcards);
             const embedding = await embedText(rawChunks[i]);
@@ -43,7 +48,14 @@ router.post("/upload/:classroomId", auth(["teacher"]), upload.single("pdf"), asy
                 quiz: analysis.quiz || [],
                 embedding,
             });
+
+            // Stay under Gemini free-tier rate limit (~15 req/min for text model)
+            if (HAS_AI && i < rawChunks.length - 1) {
+                await sleep(4500);
+            }
         }
+
+        console.log("✅ PDF processing complete: " + chunks.length + " topics analyzed.");
 
         const material = {
             id: genId(), classroomId, title: req.body.title || req.file.originalname,

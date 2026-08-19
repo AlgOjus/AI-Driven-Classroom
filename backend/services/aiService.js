@@ -1,17 +1,23 @@
-const HAS_AI = !!process.env.OPENAI_API_KEY;
-let OpenAIClient = null;
+const HAS_AI = !!process.env.GEMINI_API_KEY;
+let genAI = null;
+let textModel = null;
+let embedModel = null;
 
 if (HAS_AI) {
     try {
-        const OpenAI = require("openai");
-        OpenAIClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-        console.log("✅ AI mode: ENABLED (OpenAI)");
+        const { GoogleGenerativeAI } = require("@google/generative-ai");
+        genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+        textModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        embedModel = genAI.getGenerativeModel({ model: "text-embedding-004" });
+        console.log("✅ AI mode: ENABLED (Google Gemini)");
     } catch (e) {
-        console.log("⚠️ OpenAI package missing. Run: npm install openai");
+        console.log("⚠️ @google/generative-ai package missing. Run: npm install @google/generative-ai");
     }
 } else {
-    console.log("ℹ️ AI mode: HEURISTIC (no OPENAI_API_KEY set). App still fully functional.");
+    console.log("ℹ️ AI mode: HEURISTIC (no GEMINI_API_KEY set). App still fully functional.");
 }
+
+function sleep(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
 
 const STOPWORDS = new Set([
     "the", "is", "at", "which", "on", "a", "an", "and", "or", "of", "to", "in", "it", "that",
@@ -85,14 +91,38 @@ function buildFallbackFlashcards(topic, keywords) {
     return result;
 }
 
+function extractJSON(text) {
+    const cleaned = text.replace(/```json/gi, "").replace(/```/g, "").trim();
+    const start = cleaned.indexOf("{");
+    const end = cleaned.lastIndexOf("}");
+    if (start === -1 || end === -1) throw new Error("No JSON found in AI response");
+    return JSON.parse(cleaned.slice(start, end + 1));
+}
+
+function isRateLimitError(e) {
+    const msg = (e && e.message || "").toLowerCase();
+    return msg.includes("429") || msg.includes("rate") || msg.includes("quota") || msg.includes("resource_exhausted");
+}
+
+// Validates that flashcards actually have usable content (non-empty arrays), not just truthy keys.
+function isValidFlashcards(fc) {
+    if (!fc) return false;
+    const types = ["3d", "animation", "simulation"];
+    return types.every((t) => Array.isArray(fc[t]) && fc[t].length > 0);
+}
+
+function isValidQuiz(q) {
+    return Array.isArray(q) && q.length > 0 && q.every((item) =>
+        item.question && Array.isArray(item.options) && item.options.length === 4 &&
+        typeof item.answerIndex === "number"
+    );
+}
+
 async function embedText(text) {
-    if (!HAS_AI || !OpenAIClient) return null;
+    if (!HAS_AI || !embedModel) return null;
     try {
-        const res = await OpenAIClient.embeddings.create({
-            model: "text-embedding-3-small",
-            input: text.slice(0, 8000),
-        });
-        return res.data[0].embedding;
+        const res = await embedModel.embedContent(text.slice(0, 8000));
+        return res.embedding.values;
     } catch (e) {
         console.log("embed error:", e.message);
         return null;
@@ -112,29 +142,44 @@ function keywordOverlapScore(text, chunk) {
     return score;
 }
 
+async function callGeminiForChunk(text) {
+    const prompt =
+        "Analyze this textbook passage for a teaching app aimed at school students. Return STRICT JSON only, no markdown formatting, with keys: " +
+        "topic (short specific string naming the exact concept, not generic), " +
+        "keywords (array of 6 lowercase specific technical terms from the passage), " +
+        "flashcards (object with keys '3d','animation','simulation', each an array of exactly 3 objects shaped as " +
+        '{"title": short catchy specific title, "description": 1-2 sentence description of exactly what this visualization would show for THIS specific concept, "query": short specific search phrase}), ' +
+        'quiz (array of exactly 5 objects shaped as {"question": a specific, non-trivial question testing real understanding of this passage, "options": array of exactly 4 plausible strings, "answerIndex": number 0-3 for the correct option}). ' +
+        "Base everything strictly on the actual content below, be specific and technical, not generic. Passage: " + text.slice(0, 2000);
+
+    const result = await textModel.generateContent(prompt);
+    const raw = result.response.text();
+    return extractJSON(raw);
+}
+
 async function analyzeChunk(text) {
-    if (HAS_AI && OpenAIClient) {
-        try {
-            const prompt =
-                "Analyze this textbook passage for a teaching app. Return STRICT JSON only with keys: " +
-                "topic (short string), keywords (array of 6 lowercase strings), " +
-                "flashcards (object with keys '3d','animation','simulation', each an array of exactly 3 objects shaped as " +
-                "{title: short catchy title, description: 1-2 sentence description of what this visualization would show, query: short search phrase}), " +
-                "quiz (array of exactly 5 objects shaped as {question: string, options: array of exactly 4 strings, answerIndex: number 0-3}). " +
-                "Passage: " + text.slice(0, 1500);
-            const res = await OpenAIClient.chat.completions.create({
-                model: "gpt-4o-mini",
-                messages: [{ role: "user", content: prompt }],
-                response_format: { type: "json_object" },
-            });
-            const parsed = JSON.parse(res.choices[0].message.content);
-            if (parsed.topic && parsed.flashcards && parsed.flashcards["3d"] && parsed.flashcards.animation && parsed.flashcards.simulation) {
-                if (!parsed.quiz || !parsed.quiz.length) parsed.quiz = buildFallbackQuiz(parsed.topic, parsed.keywords || []);
-                return parsed;
+    if (HAS_AI && textModel) {
+        let lastError = null;
+        for (let attempt = 0; attempt < 3; attempt++) {
+            try {
+                const parsed = await callGeminiForChunk(text);
+                if (parsed.topic && isValidFlashcards(parsed.flashcards)) {
+                    if (!isValidQuiz(parsed.quiz)) parsed.quiz = buildFallbackQuiz(parsed.topic, parsed.keywords || []);
+                    return parsed;
+                }
+                lastError = new Error("Incomplete AI response structure");
+            } catch (e) {
+                lastError = e;
+                if (isRateLimitError(e)) {
+                    const backoff = 5000 * (attempt + 1);
+                    console.log("Rate limited, retrying in " + backoff + "ms (attempt " + (attempt + 1) + "/3)...");
+                    await sleep(backoff);
+                    continue;
+                }
+                break;
             }
-        } catch (e) {
-            console.log("analyzeChunk AI failed, using fallback:", e.message);
         }
+        console.log("analyzeChunk AI failed after retries, using fallback:", lastError && lastError.message);
     }
     const keywords = extractKeywords(text);
     const topic = keywords.slice(0, 3).join(" ") || "General Topic";
@@ -147,7 +192,7 @@ async function analyzeChunk(text) {
 }
 
 async function generateSummary(rawText, transcript, matchedTopics) {
-    if (HAS_AI && OpenAIClient) {
+    if (HAS_AI && textModel) {
         try {
             const prompt =
                 "Create a structured class summary for students who may have missed class. " +
@@ -156,11 +201,9 @@ async function generateSummary(rawText, transcript, matchedTopics) {
                 "PDF CONTENT:\n" + rawText.slice(0, 3000) +
                 "\n\nTRANSCRIPT:\n" + (transcript || "(no transcript captured)").slice(0, 3000) +
                 "\n\nVISUALS SHOWN:\n" + JSON.stringify(matchedTopics);
-            const res = await OpenAIClient.chat.completions.create({
-                model: "gpt-4o-mini",
-                messages: [{ role: "user", content: prompt }],
-            });
-            return res.choices[0].message.content;
+
+            const result = await textModel.generateContent(prompt);
+            return result.response.text();
         } catch (e) {
             console.log("generateSummary AI failed, using fallback:", e.message);
         }
@@ -171,12 +214,12 @@ async function generateSummary(rawText, transcript, matchedTopics) {
         (topics.length ? topics.map((t) => "- " + t).join("\n") : "- General overview of the material") +
         "\n\n**Transcript Excerpt:**\n" +
         (transcript ? transcript.slice(0, 800) : "No voice transcript was captured this session.") +
-        "\n\n**Note:** Set OPENAI_API_KEY for richer AI-generated summaries."
+        "\n\n**Note:** Set GEMINI_API_KEY for richer AI-generated summaries."
     );
 }
 
 async function answerFromContext(question, chunks, summary) {
-    if (HAS_AI && OpenAIClient) {
+    if (HAS_AI && textModel) {
         try {
             const context = chunks.map((c, i) => "[" + i + "] " + c.text).join("\n\n");
             const prompt =
@@ -184,11 +227,9 @@ async function answerFromContext(question, chunks, summary) {
                 "If not covered, say so honestly, then give a brief general answer flagged as outside class content.\n\n" +
                 "CLASS SUMMARY:\n" + (summary || "N/A") + "\n\nRELEVANT SOURCE CHUNKS:\n" + context +
                 "\n\nSTUDENT QUESTION: " + question;
-            const res = await OpenAIClient.chat.completions.create({
-                model: "gpt-4o-mini",
-                messages: [{ role: "user", content: prompt }],
-            });
-            return res.choices[0].message.content;
+
+            const result = await textModel.generateContent(prompt);
+            return result.response.text();
         } catch (e) {
             console.log("answerFromContext AI failed, using fallback:", e.message);
         }

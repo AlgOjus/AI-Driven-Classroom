@@ -1,5 +1,6 @@
  // optional, safe if dotenv not installed
-const express = require("express");
+require("dotenv").config({ quiet: true });
+ const express = require("express");
 const path = require("path");
 const fs = require("fs");
 
